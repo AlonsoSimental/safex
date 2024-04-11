@@ -2,12 +2,12 @@ import { StyleSheet } from 'react-native';
 import { Text, View } from '@/components/Themed';
 import { router } from 'expo-router';
 
-export default function Home() {
+export default function List() {
 
     return(
 
         <View style={styles.container}>
-            <Text>Home tab</Text>
+            <Text>Lista de padres</Text>
         </View>
 
     );

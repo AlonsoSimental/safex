@@ -33,12 +33,39 @@ export default function TabLayout() {
         // Disable the static render of the header on web
         // to prevent a hydration error in React Navigation v6.
         headerShown: false,
-      }}>
+      }}
+    >
       <Tabs.Screen
         name="home"
         options={{
-          title: 'Home',
+          title: 'Inicio',
           tabBarIcon: ({ color }) => <TabBarIcon name="home" color={"#faffff"} />,
+          tabBarLabelStyle: { color: '#faffff' },
+        }}
+      />
+      <Tabs.Screen
+        name="viewQR"
+        options={{
+          title: 'Ver QR',
+          tabBarIcon: ({ color }) => <TabBarIcon name="smile-o" color={"#faffff"} />,
+          tabBarLabelStyle: { color: '#faffff' },
+          
+        }}
+      />
+      <Tabs.Screen
+        name="list"
+        options={{
+          title: 'Lista de padres',
+          tabBarIcon: ({ color }) => <TabBarIcon name="list-alt" color={"#faffff"} />,
+          tabBarLabelStyle: { color: '#faffff' },
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Perfil',
+          tabBarIcon: ({ color }) => <TabBarIcon name="user-circle-o" color={"#faffff"} />,
+          tabBarLabelStyle: { color: '#faffff' },
         }}
       />
     </Tabs>
