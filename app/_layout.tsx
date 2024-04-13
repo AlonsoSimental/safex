@@ -4,6 +4,7 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
+import { View, Image } from 'react-native'
 
 import { useColorScheme } from '@/components/useColorScheme';
 
@@ -52,7 +53,29 @@ function RootLayoutNav() {
       <Stack>
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="viewQR" options={{ headerTitle: (props) => <LogoTitle {...props} /> }} />
+      <Stack.Screen 
+        name="list" 
+        options={{ 
+          title: 'Padres en la fila',
+          headerStyle: {
+            backgroundColor: '#0078b7',
+          },
+          headerTintColor: '#fff',
+        }} 
+      />
       </Stack>
     </ThemeProvider>
+  );
+}
+
+function LogoTitle() {
+  return (
+    
+      <Image
+        style={{ width: 130, height: 40}}
+        source={require('../assets/images/logo.png')}
+      />
+
   );
 }

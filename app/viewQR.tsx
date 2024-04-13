@@ -2,12 +2,12 @@ import { StyleSheet } from 'react-native';
 import { Text, View } from '@/components/Themed';
 import { router } from 'expo-router';
 
-export default function ViewQR() {
+export default function List() {
 
     return(
 
         <View style={styles.container}>
-            <Text>Ver QR dentro de tabs</Text>
+            <Text>ver QR sin tabs</Text>
         </View>
 
     );

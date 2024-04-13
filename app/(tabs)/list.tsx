@@ -7,7 +7,7 @@ export default function List() {
     return(
 
         <View style={styles.container}>
-            <Text>Lista de padres</Text>
+            <Text>Lista de padres con tabs</Text>
         </View>
 
     );

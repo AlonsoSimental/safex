@@ -1,6 +1,6 @@
 import React from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Link, Tabs } from 'expo-router';
+import { Link, Tabs, router, useNavigation } from 'expo-router';
 
 import Colors from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
@@ -16,7 +16,18 @@ function TabBarIcon(props: {
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const navigation = useNavigation();
 
+  const handleTabPress = (screenName : string) => {
+    if (screenName === 'viewQR') {
+      console.log("presiono la tab de ", screenName)
+      navigation.navigate('viewQR')
+    } else if(screenName === 'list') {
+      console.log("presiono la tab de ", screenName)
+      navigation.navigate('list')
+    }
+  };
+  
   return (
     <Tabs
       screenOptions={{
@@ -38,7 +49,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="home"
         options={{
-          title: 'Inicio',
+          title: 'Home',
           tabBarIcon: ({ color }) => <TabBarIcon name="home" color={"#faffff"} />,
           tabBarLabelStyle: { color: '#faffff' },
         }}
@@ -49,7 +60,12 @@ export default function TabLayout() {
           title: 'Ver QR',
           tabBarIcon: ({ color }) => <TabBarIcon name="smile-o" color={"#faffff"} />,
           tabBarLabelStyle: { color: '#faffff' },
-          
+        }}
+        listeners={{
+          tabPress: (e) => {
+            e.preventDefault();
+            handleTabPress('viewQR');
+          },
         }}
       />
       <Tabs.Screen
@@ -58,6 +74,12 @@ export default function TabLayout() {
           title: 'Lista de padres',
           tabBarIcon: ({ color }) => <TabBarIcon name="list-alt" color={"#faffff"} />,
           tabBarLabelStyle: { color: '#faffff' },
+        }}
+        listeners={{
+          tabPress: (e) => {
+            e.preventDefault();
+            handleTabPress('list');
+          },
         }}
       />
       <Tabs.Screen
