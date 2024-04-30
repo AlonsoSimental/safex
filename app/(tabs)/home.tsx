@@ -1,7 +1,9 @@
-import React from 'react';
-import { StyleSheet, Image, FlatList } from 'react-native';
+import React, { Component } from 'react';
+import { StyleSheet, Image, FlatList, Animated, Easing } from 'react-native';
 import { Text, View } from '@/components/Themed';
 import { router } from 'expo-router';
+
+const SPRING_CONFIG = { tension: 2, friction: 3 };
 
 const entriesData = [
     {
@@ -84,54 +86,82 @@ const Entry: React.FC<EntryProps> = ({ childName, entryDate, entryHour }) => (
 );
 
 
-export default function Home() {
+class Home extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            scale: new Animated.Value(1), // Valor inicial de escala (1 = sin cambio)
+        };
+    }
+    componentDidMount() {
+        this.startBreathingAnimation();
+    }
 
-    return (
-        <View style={styles.home}>
+    startBreathingAnimation() {
+        Animated.sequence([
+            Animated.spring(this.state.scale, {
+                ...SPRING_CONFIG,
+                toValue: 1.04, // Escala a 1.1 (expansión)
+                useNativeDriver: true,
+            }),
+            Animated.spring(this.state.scale, {
+                ...SPRING_CONFIG,
+                toValue: 1, // Escala a 1 (contracción)
+                useNativeDriver: true,
+            }),
+        ]).start(() => this.startBreathingAnimation()); // Repetir la animación
+    }
+    render() {
+        const { scale } = this.state;
 
-            <View style={styles.topGroup}>
-                <Image
-                    style={styles.background}
-                    source={require('../../assets/images/bkg.png')}
-                />
-                <Image
-                    style={{ width: 81, height: 25, paddingBottom: 5 }}
-                    source={require('../../assets/images/logo.png')}
-                />
-                <View style={styles.circle1}>
-                    <View style={styles.circle2}>
-                        <View style={styles.circle3}>
-                            <View style={styles.circle4}>
-                                <Image
-                                    style={{ aspectRatio: 1, height: "35%" }}
-                                    source={require('../../assets/images/QR.png')}
+        return (
+            <View style={styles.home} >
+
+                <View style={styles.topGroup}>
+                    <Image
+                        style={styles.background}
+                        source={require('../../assets/images/bkg.png')}
+                    />
+                    <Image
+                        style={{ width: 81, height: 25, paddingBottom: 5 }}
+                        source={require('../../assets/images/logo.png')}
+                    />
+                    <Animated.View style={[styles.circle1, { transform: [{ scale }] }]}>
+                        <Animated.View style={[styles.circle2, { transform: [{ scale }] }]}>
+                            <Animated.View style={[styles.circle3, { transform: [{ scale }] }]}>
+                                <Animated.View style={[styles.circle4, { transform: [{ scale }] }]}>
+                                    <Image
+                                        style={{ aspectRatio: 1, height: "35%" }}
+                                        source={require('../../assets/images/QR.png')}
+                                    />
+                                    <Text style={styles.verQr}>Ver QR</Text>
+                                </Animated.View>
+                            </Animated.View>
+                        </Animated.View>
+                    </Animated.View>
+                </View>
+                <View style={styles.bottomGroup}>
+                    <Text style={styles.entries}>Entradas</Text>
+                    <View style={styles.Entrylist}>
+                        <FlatList
+                            data={entriesData}
+                            keyExtractor={(item, index) => index.toString()}
+                            renderItem={({ item }) => (
+                                <Entry
+                                    childName={item.childName}
+                                    entryDate={item.entryDate}
+                                    entryHour={item.entryHour}
                                 />
-                                <Text style={styles.verQr}>Ver QR</Text>
-                            </View>
-                        </View>
+                            )}
+                        />
+
                     </View>
                 </View>
             </View>
-            <View style={styles.bottomGroup}>
-                <Text style={styles.entries}>Entradas</Text>
-                <View style={styles.Entrylist}>
-                    <FlatList
-                        data={entriesData}
-                        keyExtractor={(item, index) => index.toString()}
-                        renderItem={({ item }) => (
-                            <Entry
-                                childName={item.childName}
-                                entryDate={item.entryDate}
-                                entryHour={item.entryHour}
-                            />
-                        )}
-                    />
-
-                </View>
-            </View>
-        </View>
-    )
+        )
+    }
 }
+
 
 const styles = StyleSheet.create({
     home: {
@@ -277,4 +307,4 @@ const styles = StyleSheet.create({
 })
 
 
-
+export default Home;
