@@ -1,79 +1,23 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Image, FlatList, Animated, Easing, TouchableOpacity } from 'react-native';
 import { Text, View } from '@/components/Themed';
+import { CameraView, useCameraPermissions } from 'expo-camera/next';
 import { router } from 'expo-router';
 
+let recentEntry = "";
 const SPRING_CONFIG = { tension: 2, friction: 3 };
 
-const entriesData = [
-    {
-        childName: 'Niño 1',
-        entryDate: 'Lunes 26 Junio 2024',
-        entryHour: '8:00 am'
-    },
-    {
-        childName: 'Niño 2',
-        entryDate: 'Lunes 26 Junio 2024',
-        entryHour: '8:01 am'
-    },
-    {
-        childName: 'Niño 3',
-        entryDate: 'Lunes 26 Junio 2024',
-        entryHour: '8:03 am'
-    },
-    {
-        childName: 'Niño 4',
-        entryDate: 'Lunes 26 Junio 2024',
-        entryHour: '8:03 am'
-    },
-    {
-        childName: 'Niño 5',
-        entryDate: 'Lunes 26 Junio 2024',
-        entryHour: '8:04 am'
-    },
-    {
-        childName: 'Niño 6',
-        entryDate: 'Lunes 26 Junio 2024',
-        entryHour: '8:06 am'
-    },
-    {
-        childName: 'Niño 7',
-        entryDate: 'Lunes 26 Junio 2024',
-        entryHour: '8:20 am'
-    },
-    {
-        childName: 'Niño 8',
-        entryDate: 'Lunes 26 Junio 2024',
-        entryHour: '8:20 am'
-    },
-    {
-        childName: 'Niño 9',
-        entryDate: 'Lunes 26 Junio 2024',
-        entryHour: '8:20 am'
-    },
-    {
-        childName: 'Niño 10',
-        entryDate: 'Lunes 26 Junio 2024',
-        entryHour: '8:20 am'
-    },
-    {
-        childName: 'Niño 11',
-        entryDate: 'Lunes 26 Junio 2024',
-        entryHour: '8:20 am'
-    },
-    {
-        childName: 'Niño 12',
-        entryDate: 'Lunes 26 Junio 2024',
-        entryHour: '8:20 am'
-    },
-
-];
+interface ScanEvent {
+    data: string
+};
 
 type EntryProps = {
     childName: string;
     entryDate: string;
     entryHour: string;
 };
+
+const entriesData: EntryProps[] = [];
 
 const Entry: React.FC<EntryProps> = ({ childName, entryDate, entryHour }) => (
     <View style={styles.Entry}>
@@ -87,8 +31,16 @@ const Entry: React.FC<EntryProps> = ({ childName, entryDate, entryHour }) => (
 const scale = new Animated.Value(1);
 
 export default function Home() {
+    const [facing, setFacing] = useState('back');
+    const [permission, requestPermission] = useCameraPermissions();
+    const [isScanning, setIsScanning] = useState(false);
+    const [entryRecorded, setEntryRecorded] = useState(false);
+
     useEffect(() => {
         startBreathingAnimation();
+        (async () => {
+            await requestPermission();
+        })();
     }, []);
 
     const startBreathingAnimation = () => {
@@ -107,62 +59,166 @@ export default function Home() {
     }
 
     const handleScanPress = () => {
-        
-      };
+        setIsScanning(true);
+    };
 
-      
+    const goBack = () => {
+        setIsScanning(false);
+    };
+
+    type dataProp = {
+        data: string
+    }
+
+    const handleBarcodeScanned = async ({ data }: ScanEvent) => {
+        // if (!isScanning) return;
+        if (recentEntry != data) {
+            console.log(data)
+            const now = new Date();
+            const fecha = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`;
+            const hora = now.getHours();
+            const minutos = now.getMinutes().toString().padStart(2, '0');
+            const horaymin = now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+            // try {
+            //     // Consultar todos los registros del día
+            //     const response = await axios.get(sheetAPI);
+            //     const registrosDelDia = response.data;
+            //     console.log(registrosDelDia)
+
+            //     // Filtrar los registros para encontrar los que coinciden con el ID del alumno
+            //     const registrosAlumno = registrosDelDia.filter(registro => registro.Fecha === fecha && registro.ID === data);
+
+            //     let registro = { Fecha: fecha, ID: data, Registro: '', Hora: `${hora}:${minutos}` };
+            //     let mensajeAlerta = '';
+
+            //     // Lógica para determinar si se registra una entrada o salida
+            //     if ((hora >= 7 && hora < 9) || registrosAlumno.length === 0) {
+            //       registro.Registro = 'E'; // Entrada
+            //       mensajeAlerta = `ID alumno: ${data}\nEntrada registrada correctamente\nHora: ${hora}:${minutos}`;
+            //     } else {
+            //       const entradaExistente = registrosAlumno.some(reg => reg.Registro === 'E');
+            //       if (entradaExistente) {
+            //         const ultimoRegistro = registrosAlumno[registrosAlumno.length-1];
+            //         if(ultimoRegistro.Registro === 'S') {
+            //           registro.Registro = 'E'; // Entrada fuera de tiempo
+            //           mensajeAlerta = `ID alumno: ${data}\nEntrada fuera de tiempo registrada correctamente\nHora: ${hora}:${minutos}`;
+            //         }else {
+            //           registro.Registro = 'S'; // Salida
+            //           mensajeAlerta = `ID alumno: ${data}\nSalida registrada correctamente\nHora: ${hora}:${minutos}`;
+            //         }
+            //       } else {
+            //         registro.Registro = 'E'; // Entrada fuera de tiempo
+            //         mensajeAlerta = `ID alumno: ${data}\nEntrada fuera de tiempo registrada correctamente\nHora: ${hora}:${minutos}`;
+            //       }
+            //     }
+
+            //     // Enviar el nuevo registro al spreadsheet
+            //     await axios.post(sheetAPI, registro);
+
+            //     Alert.alert('Código QR Escaneado', mensajeAlerta, [{ text: 'OK', onPress: () => setIsScanning(true) }], { cancelable: false });
+            //   } catch (error) {
+            //     console.error("Error al interactuar con la hoja de cálculo", error);
+            //     Alert.alert('Error', 'Ocurrió un error al procesar el escaneo. Intente nuevamente.', [{ text: 'OK' }]);
+            //   }
+            const newEntry: EntryProps = {
+                childName: data,
+                entryDate: fecha,
+                entryHour: horaymin
+            };
+
+            entriesData.push(newEntry);
+            recentEntry=data;
+        }
+
+        // setIsScanning(false);
+    };
+
+    if (!permission) {
+        return <View style={styles.container}><Text>Solicitando permisos...</Text></View>;
+    }
+
+    if (!permission.granted) {
+        return <View style={styles.container}><Text>Se necesitan permisos para la cámara</Text></View>;
+    }
+
     return (
-        <View style={styles.home} >
-            <View style={styles.topGroup}>
-                <Image
-                    style={styles.background}
-                    source={require('../../assets/images/bkg.png')}
-                />
-                <Image
-                    style={{ width: 81, height: 25, paddingBottom: 5 }}
-                    source={require('../../assets/images/logo.png')}
-                />
-                <Animated.View style={[styles.circle1, { transform: [{ scale }] }]}>
-                    <Animated.View style={[styles.circle2, { transform: [{ scale }] }]}>
-                        <Animated.View style={[styles.circle3, { transform: [{ scale }] }]}>
-                            <Animated.View style={[styles.circle4, { transform: [{ scale }] }]}>
-                                <TouchableOpacity style={styles.qr_button} onPress={handleScanPress}>
-                                    <Image
-                                        style={{ aspectRatio: 1, height: "35%" }}
-                                        source={require('../../assets/images/QR.png')}
-                                    />
-                                    <Text style={styles.verQr}>Ver QR</Text>
-                                </TouchableOpacity>
-                                
+        <View style={styles.container}>
+            {!isScanning && (
+                <View style={styles.home} >
+                    <View style={styles.topGroup}>
+                        <Image
+                            style={styles.background}
+                            source={require('../../assets/images/bkg.png')}
+                        />
+                        <Image
+                            style={{ width: 81, height: 25, paddingBottom: 5 }}
+                            source={require('../../assets/images/logo.png')}
+                        />
+                        <Animated.View style={[styles.circle1, { transform: [{ scale }] }]}>
+                            <Animated.View style={[styles.circle2, { transform: [{ scale }] }]}>
+                                <Animated.View style={[styles.circle3, { transform: [{ scale }] }]}>
+                                    <Animated.View style={[styles.circle4, { transform: [{ scale }] }]}>
+                                        <TouchableOpacity style={styles.qr_button} onPress={handleScanPress}>
+                                            <Image
+                                                style={{ aspectRatio: 1, height: "35%" }}
+                                                source={require('../../assets/images/QR.png')}
+                                            />
+                                            <Text style={styles.verQr}>Escanear QR</Text>
+                                        </TouchableOpacity>
+
+                                    </Animated.View>
+                                </Animated.View>
                             </Animated.View>
                         </Animated.View>
-                    </Animated.View>
-                </Animated.View>
-            </View>
-            <View style={styles.bottomGroup}>
-                <Text style={styles.entries}>Entradas</Text>
-                <View style={styles.Entrylist}>
-                    <FlatList
-                        data={entriesData}
-                        keyExtractor={(item, index) => index.toString()}
-                        renderItem={({ item }) => (
-                            <Entry
-                                childName={item.childName}
-                                entryDate={item.entryDate}
-                                entryHour={item.entryHour}
+                    </View>
+                    <View style={styles.bottomGroup}>
+                        <Text style={styles.entries}>Entradas</Text>
+                        <View style={styles.Entrylist}>
+                            <FlatList
+                                data={entriesData}
+                                keyExtractor={(item, index) => index.toString()}
+                                renderItem={({ item }) => (
+                                    <Entry
+                                        childName={item.childName}
+                                        entryDate={item.entryDate}
+                                        entryHour={item.entryHour}
+                                    />
+                                )}
                             />
-                        )}
-                    />
 
+                        </View>
+                    </View>
                 </View>
-            </View>
+            )}
+            {isScanning && (
+                <CameraView
+                    style={styles.camera}
+                    facing={facing}
+                    onBarcodeScanned={handleBarcodeScanned}
+                    barCodeScannerSettings={{
+                        barCodeTypes: ['qr'],
+                    }}
+                >
+                    <View style={styles.buttonContainer}>
+                        <TouchableOpacity style={styles.button} onPress={goBack}>
+                            <Text style={styles.text}>Volver atras</Text>
+                        </TouchableOpacity>
+                    </View>
+                </CameraView>
+            )}
         </View>
+
     )
 
 }
 
 
 const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: 'black',
+        justifyContent: 'center',
+    },
     home: {
         position: "relative",
         display: "flex",
@@ -312,6 +368,41 @@ const styles = StyleSheet.create({
         paddingBottom: 10,
         paddingTop: 10,
         backgroundColor: "rgba(245,247,250,1)",
+    },
+
+    camera: {
+        flex: 1,
+        width: '100%',
+    },
+    scanButton: {
+        backgroundColor: 'blue',
+        padding: 15,
+        borderRadius: 5,
+        marginBottom: 20,
+    },
+    scanButtonText: {
+        color: 'white',
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+
+    buttonContainer: {
+        flex: 1,
+        flexDirection: "row",
+        backgroundColor: 'transparent',
+        justifyContent: "flex-start",
+        alignItems: "flex-start",
+        margin: 64,
+    },
+    button: {
+        flex: 1,
+        alignSelf: 'flex-end',
+        alignItems: 'center',
+    },
+    text: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: 'white',
     },
 })
 
