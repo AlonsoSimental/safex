@@ -1,5 +1,5 @@
-import React, { Component } from 'react';
-import { StyleSheet, Image, FlatList, Animated, Easing } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, Image, FlatList, Animated, Easing, TouchableOpacity } from 'react-native';
 import { Text, View } from '@/components/Themed';
 import { router } from 'expo-router';
 
@@ -84,82 +84,81 @@ const Entry: React.FC<EntryProps> = ({ childName, entryDate, entryHour }) => (
         <Text style={styles.EntryHour}>{entryHour}</Text>
     </View>
 );
+const scale = new Animated.Value(1);
 
+export default function Home() {
+    useEffect(() => {
+        startBreathingAnimation();
+    }, []);
 
-class Home extends Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            scale: new Animated.Value(1), // Valor inicial de escala (1 = sin cambio)
-        };
-    }
-    componentDidMount() {
-        this.startBreathingAnimation();
-    }
-
-    startBreathingAnimation() {
+    const startBreathingAnimation = () => {
         Animated.sequence([
-            Animated.spring(this.state.scale, {
+            Animated.spring(scale, {
                 ...SPRING_CONFIG,
                 toValue: 1.04, // Escala a 1.1 (expansión)
                 useNativeDriver: true,
             }),
-            Animated.spring(this.state.scale, {
+            Animated.spring(scale, {
                 ...SPRING_CONFIG,
                 toValue: 1, // Escala a 1 (contracción)
                 useNativeDriver: true,
             }),
-        ]).start(() => this.startBreathingAnimation()); // Repetir la animación
+        ]).start(() => startBreathingAnimation()); // Repetir la animación
     }
-    render() {
-        const { scale } = this.state;
 
-        return (
-            <View style={styles.home} >
+    const handleScanPress = () => {
+        
+      };
 
-                <View style={styles.topGroup}>
-                    <Image
-                        style={styles.background}
-                        source={require('../../assets/images/bkg.png')}
-                    />
-                    <Image
-                        style={{ width: 81, height: 25, paddingBottom: 5 }}
-                        source={require('../../assets/images/logo.png')}
-                    />
-                    <Animated.View style={[styles.circle1, { transform: [{ scale }] }]}>
-                        <Animated.View style={[styles.circle2, { transform: [{ scale }] }]}>
-                            <Animated.View style={[styles.circle3, { transform: [{ scale }] }]}>
-                                <Animated.View style={[styles.circle4, { transform: [{ scale }] }]}>
+      
+    return (
+        <View style={styles.home} >
+            <View style={styles.topGroup}>
+                <Image
+                    style={styles.background}
+                    source={require('../../assets/images/bkg.png')}
+                />
+                <Image
+                    style={{ width: 81, height: 25, paddingBottom: 5 }}
+                    source={require('../../assets/images/logo.png')}
+                />
+                <Animated.View style={[styles.circle1, { transform: [{ scale }] }]}>
+                    <Animated.View style={[styles.circle2, { transform: [{ scale }] }]}>
+                        <Animated.View style={[styles.circle3, { transform: [{ scale }] }]}>
+                            <Animated.View style={[styles.circle4, { transform: [{ scale }] }]}>
+                                <TouchableOpacity style={styles.qr_button} onPress={handleScanPress}>
                                     <Image
                                         style={{ aspectRatio: 1, height: "35%" }}
                                         source={require('../../assets/images/QR.png')}
                                     />
                                     <Text style={styles.verQr}>Ver QR</Text>
-                                </Animated.View>
+                                </TouchableOpacity>
+                                
                             </Animated.View>
                         </Animated.View>
                     </Animated.View>
-                </View>
-                <View style={styles.bottomGroup}>
-                    <Text style={styles.entries}>Entradas</Text>
-                    <View style={styles.Entrylist}>
-                        <FlatList
-                            data={entriesData}
-                            keyExtractor={(item, index) => index.toString()}
-                            renderItem={({ item }) => (
-                                <Entry
-                                    childName={item.childName}
-                                    entryDate={item.entryDate}
-                                    entryHour={item.entryHour}
-                                />
-                            )}
-                        />
+                </Animated.View>
+            </View>
+            <View style={styles.bottomGroup}>
+                <Text style={styles.entries}>Entradas</Text>
+                <View style={styles.Entrylist}>
+                    <FlatList
+                        data={entriesData}
+                        keyExtractor={(item, index) => index.toString()}
+                        renderItem={({ item }) => (
+                            <Entry
+                                childName={item.childName}
+                                entryDate={item.entryDate}
+                                entryHour={item.entryHour}
+                            />
+                        )}
+                    />
 
-                    </View>
                 </View>
             </View>
-        )
-    }
+        </View>
+    )
+
 }
 
 
@@ -218,9 +217,19 @@ const styles = StyleSheet.create({
         alignItems: "center",
         width: "100%",
         height: "100%",
-        paddingTop: "20%",
+        paddingTop: "10%",
         borderRadius: 1000,
         backgroundColor: "rgba(239,83,143,1)",
+    },
+    qr_button: {
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
+        alignItems: "center",
+        width: "100%",
+        height: "100%",
+        paddingTop: "20%",
+        borderRadius: 1000,
     },
     verQr: {
         display: "flex",
@@ -306,5 +315,3 @@ const styles = StyleSheet.create({
     },
 })
 
-
-export default Home;

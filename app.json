@@ -16,14 +16,20 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Se necesitan permisos para acceder a la cámara."
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.alonsos12.safex"
+      "package": "com.alonsos12.safex",
+      "permissions": [
+        "CAMERA"
+      ]
     },
     "web": {
       "bundler": "metro",
