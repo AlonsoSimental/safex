@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Image, FlatList, Animated, Easing, TouchableOpacity } from 'react-native';
-import { Text, View } from '@/components/Themed';
+import { StyleSheet, Image, FlatList, Animated, Easing, TouchableOpacity, View } from 'react-native';
+import { Text } from '@/components/Themed';
 import { CameraView, useCameraPermissions } from 'expo-camera/next';
 import { router } from 'expo-router';
 
@@ -40,6 +40,7 @@ export default function Home() {
         startBreathingAnimation();
         (async () => {
             await requestPermission();
+            console.log("SE PIDEN PERMISOS", requestPermission);
         })();
     }, []);
 
@@ -60,6 +61,7 @@ export default function Home() {
 
     const handleScanPress = () => {
         setIsScanning(true);
+        console.log("ESCANEAR IGUAL A TRUE");
     };
 
     const goBack = () => {
@@ -71,6 +73,7 @@ export default function Home() {
     }
 
     const handleBarcodeScanned = async ({ data }: ScanEvent) => {
+        console.log("SE INGRESA A LA FUNCIÓN PARA ESCANEAR");
         // if (!isScanning) return;
         if (recentEntry != data) {
             console.log(data)
