@@ -1,25 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Image, FlatList, Animated, Easing, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Image, FlatList, Animated, Easing, TouchableOpacity, View, Alert } from 'react-native';
 import { Text } from '@/components/Themed';
 import { CameraView, useCameraPermissions } from 'expo-camera/next';
+import Toast from 'react-native-toast-message';
 import { router } from 'expo-router';
 
 let recentEntry = "";
 const SPRING_CONFIG = { tension: 2, friction: 3 };
-
-interface ScanEvent {
-    boundingBox: {
-        origin: {
-            x: number;
-            y: number;
-        };
-        size: {
-            height: number;
-            width: number;
-        };
-    };
-    data: string;
-};
 
 type EntryProps = {
     childName: string;
@@ -41,6 +28,7 @@ const Entry: React.FC<EntryProps> = ({ childName, entryDate, entryHour }) => (
 const scale = new Animated.Value(1);
 
 export default function Home() {
+
     const [facing, setFacing] = useState('back');
     const [permission, requestPermission] = useCameraPermissions();
     const [isScanning, setIsScanning] = useState(false);
@@ -54,7 +42,6 @@ export default function Home() {
         startBreathingAnimation();
         (async () => {
             await requestPermission();
-            console.log("SE PIDEN PERMISOS", requestPermission);
         })();
     }, []);
 
@@ -75,7 +62,6 @@ export default function Home() {
 
     const handleScanPress = () => {
         setIsScanning(true);
-        console.log("ESCANEAR IGUAL A TRUE");
     };
 
     const goBack = () => {
@@ -86,14 +72,8 @@ export default function Home() {
         data: string
     }
 
-    const handleBarcodeScanned = async ({ boundingBox, data }: ScanEvent) => {
+    const handleBarcodeScanned = async ({ data }) => {
         // if (!isScanning) return;
-        console.log(boundingBox);
-        const { origin, size } = boundingBox;
-        setX(origin.x);
-        setY(origin.y);
-        setWidth(size.width);
-        setHeight(size.height);
 
         if (recentEntry != data) {
             console.log(data)
@@ -151,6 +131,17 @@ export default function Home() {
 
             entriesData.push(newEntry);
             recentEntry = data;
+            Toast.show({
+                type: 'success',
+                position: 'bottom',
+                text1: 'QR escaneado con éxito',
+                visibilityTime: 2000, 
+                autoHide: true,
+                topOffset: 30,
+                bottomOffset: 40,
+                onShow: () => {},
+                onHide: () => { setIsScanning(false); } 
+            });
         }
 
         // setIsScanning(false);
@@ -240,6 +231,7 @@ export default function Home() {
                    
                 </CameraView>
             )}
+            <Toast />
         </View>
 
     )
