@@ -8,7 +8,17 @@ let recentEntry = "";
 const SPRING_CONFIG = { tension: 2, friction: 3 };
 
 interface ScanEvent {
-    data: string
+    boundingBox: {
+        origin: {
+            x: number;
+            y: number;
+        };
+        size: {
+            height: number;
+            width: number;
+        };
+    };
+    data: string;
 };
 
 type EntryProps = {
@@ -35,6 +45,10 @@ export default function Home() {
     const [permission, requestPermission] = useCameraPermissions();
     const [isScanning, setIsScanning] = useState(false);
     const [entryRecorded, setEntryRecorded] = useState(false);
+    const [X, setX] = useState(0);
+    const [Y, setY] = useState(0);
+    const [width, setWidth] = useState(0);
+    const [height, setHeight] = useState(0);
 
     useEffect(() => {
         startBreathingAnimation();
@@ -72,9 +86,15 @@ export default function Home() {
         data: string
     }
 
-    const handleBarcodeScanned = async ({ data }: ScanEvent) => {
-        console.log("SE INGRESA A LA FUNCIÓN PARA ESCANEAR");
+    const handleBarcodeScanned = async ({ boundingBox, data }: ScanEvent) => {
         // if (!isScanning) return;
+        console.log(boundingBox);
+        const { origin, size } = boundingBox;
+        setX(origin.x);
+        setY(origin.y);
+        setWidth(size.width);
+        setHeight(size.height);
+
         if (recentEntry != data) {
             console.log(data)
             const now = new Date();
@@ -130,7 +150,7 @@ export default function Home() {
             };
 
             entriesData.push(newEntry);
-            recentEntry=data;
+            recentEntry = data;
         }
 
         // setIsScanning(false);
@@ -168,7 +188,6 @@ export default function Home() {
                                             />
                                             <Text style={styles.verQr}>Escanear QR</Text>
                                         </TouchableOpacity>
-
                                     </Animated.View>
                                 </Animated.View>
                             </Animated.View>
@@ -196,17 +215,29 @@ export default function Home() {
             {isScanning && (
                 <CameraView
                     style={styles.camera}
-                    facing={facing}
+                    facing={'back'}
                     onBarcodeScanned={handleBarcodeScanned}
                     barCodeScannerSettings={{
                         barCodeTypes: ['qr'],
                     }}
                 >
+                     <View style={{
+                        position: 'absolute',
+                        top: Y, 
+                        left: X, 
+                        width: width, 
+                        height: height, 
+                        borderColor: 'green', 
+                        borderWidth:2, 
+                        backgroundColor: 'transparent'
+                    }}>
+                    </View>
                     <View style={styles.buttonContainer}>
                         <TouchableOpacity style={styles.button} onPress={goBack}>
                             <Text style={styles.text}>Volver atras</Text>
                         </TouchableOpacity>
                     </View>
+                   
                 </CameraView>
             )}
         </View>
