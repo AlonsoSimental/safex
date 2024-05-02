@@ -8,6 +8,7 @@ export default function Profile() {
 
         <View style={styles.container}>
             <Text>Perfil</Text>
+            <Text>Hola buenas</Text>
         </View>
 
     );
