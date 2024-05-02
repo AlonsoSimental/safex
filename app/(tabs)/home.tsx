@@ -14,6 +14,10 @@ type EntryProps = {
     entryHour: string;
 };
 
+interface ScanArguments {
+    data: string;
+}
+
 const entriesData: EntryProps[] = [];
 
 const Entry: React.FC<EntryProps> = ({ childName, entryDate, entryHour }) => (
@@ -49,15 +53,15 @@ export default function Home() {
         Animated.sequence([
             Animated.spring(scale, {
                 ...SPRING_CONFIG,
-                toValue: 1.04, // Escala a 1.1 (expansión)
+                toValue: 1.04,
                 useNativeDriver: true,
             }),
             Animated.spring(scale, {
                 ...SPRING_CONFIG,
-                toValue: 1, // Escala a 1 (contracción)
+                toValue: 1,
                 useNativeDriver: true,
             }),
-        ]).start(() => startBreathingAnimation()); // Repetir la animación
+        ]).start(() => startBreathingAnimation());
     }
 
     const handleScanPress = () => {
@@ -68,13 +72,7 @@ export default function Home() {
         setIsScanning(false);
     };
 
-    type dataProp = {
-        data: string
-    }
-
-    const handleBarcodeScanned = async ({ data }) => {
-        // if (!isScanning) return;
-
+    const handleBarcodeScanned = async ({ data }: ScanArguments) => {
         if (recentEntry != data) {
             console.log(data)
             const now = new Date();
@@ -140,10 +138,9 @@ export default function Home() {
                 topOffset: 30,
                 bottomOffset: 40,
                 onShow: () => {},
-                onHide: () => { setIsScanning(false); } 
+                onHide: () => {} 
             });
         }
-
         // setIsScanning(false);
     };
 
@@ -206,7 +203,7 @@ export default function Home() {
             {isScanning && (
                 <CameraView
                     style={styles.camera}
-                    facing={'back'}
+                    facing={facing}
                     onBarcodeScanned={handleBarcodeScanned}
                     barCodeScannerSettings={{
                         barCodeTypes: ['qr'],
