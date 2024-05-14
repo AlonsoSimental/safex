@@ -4,7 +4,9 @@ import { Text } from '@/components/Themed';
 import { CameraView, useCameraPermissions } from 'expo-camera/next';
 import Toast from 'react-native-toast-message';
 import { router } from 'expo-router';
+import axios from 'axios';
 
+let sheetAPI = 'https://sheetdb.io/api/v1/nkf1qqmfh8elz';
 let recentEntry = "";
 const SPRING_CONFIG = { tension: 2, friction: 3 };
 
@@ -74,9 +76,9 @@ export default function Home() {
 
     const handleBarcodeScanned = async ({ data }: ScanArguments) => {
         if (recentEntry != data) {
-            console.log(data)
+            recentEntry = data;
             const now = new Date();
-            const fecha = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`;
+            const fecha = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`;
             const hora = now.getHours();
             const minutos = now.getMinutes().toString().padStart(2, '0');
             const horaymin = now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
@@ -121,25 +123,50 @@ export default function Home() {
             //     console.error("Error al interactuar con la hoja de cálculo", error);
             //     Alert.alert('Error', 'Ocurrió un error al procesar el escaneo. Intente nuevamente.', [{ text: 'OK' }]);
             //   }
-            const newEntry: EntryProps = {
-                childName: data,
-                entryDate: fecha,
-                entryHour: horaymin
-            };
+            try {
+                let action = "";
+                const response2 = await axios.get(sheetAPI+"/search?id="+data+"&date="+fecha+"&sheet=Sheet2");
+                let entries= response2.data;
+                if (entries.length == 0) {
+                    action = "E";
+                } else {
+                    const lastEntry = entries[entries.length-1];
+                    if(lastEntry.action == "E"){
+                        action = "S";
+                    } else {
+                        action = "E";
+                    }
+                }
+                await axios.post(sheetAPI+"?sheet=Sheet2", {id: data, date: fecha, hour: horaymin, action: action});
+                if(action == "E"){
+                    const response = await axios.get(sheetAPI+"/search?id="+data);
+                    let entry = response.data[0];
+                    const newEntry: EntryProps = {
+                        childName: entry.name,
+                        entryDate: fecha,
+                        entryHour: horaymin
+                    };
+                    entriesData.push(newEntry);
+                }    
 
-            entriesData.push(newEntry);
-            recentEntry = data;
-            Toast.show({
-                type: 'success',
-                position: 'bottom',
-                text1: 'QR escaneado con éxito',
-                visibilityTime: 2000, 
-                autoHide: true,
-                topOffset: 30,
-                bottomOffset: 40,
-                onShow: () => {},
-                onHide: () => {} 
-            });
+                Toast.show({
+                    type: 'success',
+                    position: 'bottom',
+                    text1: 'QR escaneado con éxito',
+                    visibilityTime: 2000, 
+                    autoHide: true,
+                    topOffset: 30,
+                    bottomOffset: 40,
+                    onShow: () => {},
+                    onHide: () => {} 
+                });
+            } catch (error) {
+                console.log("Error al interactuar con la hoja de cálculo", error);
+                Alert.alert('Error', 'Ocurrió un error al procesar el escaneo. Intente nuevamente.', [{ text: 'OK' }]);
+            }   
+            
+
+            
         }
         // setIsScanning(false);
     };
