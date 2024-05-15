@@ -223,7 +223,7 @@ export default function Home() {
             {isScanning && (
                 <CameraView
                     style={styles.camera}
-                    facing={"front"}
+                    facing={"back"}
                     onBarcodeScanned={handleBarcodeScanned}
                     barcodeScannerSettings={{
                         barcodeTypes: ['qr'],
