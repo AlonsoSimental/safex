@@ -39,10 +39,6 @@ export default function Home() {
     const [permission, requestPermission] = useCameraPermissions();
     const [isScanning, setIsScanning] = useState(false);
     const [entryRecorded, setEntryRecorded] = useState(false);
-    const [X, setX] = useState(0);
-    const [Y, setY] = useState(0);
-    const [width, setWidth] = useState(0);
-    const [height, setHeight] = useState(0);
 
     useEffect(() => {
         startBreathingAnimation();
@@ -233,17 +229,6 @@ export default function Home() {
                         barcodeTypes: ['qr'],
                     }}
                 >
-                     <View style={{
-                        position: 'absolute',
-                        top: Y, 
-                        left: X, 
-                        width: width, 
-                        height: height, 
-                        borderColor: 'green', 
-                        borderWidth:2, 
-                        backgroundColor: 'transparent'
-                    }}>
-                    </View>
                     <View style={styles.buttonContainer}>
                         <TouchableOpacity style={styles.button} onPress={goBack}>
                             <Text style={styles.text}>Volver</Text>
