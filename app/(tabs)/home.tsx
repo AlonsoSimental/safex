@@ -114,10 +114,8 @@ export default function Home() {
             //         mensajeAlerta = `ID alumno: ${data}\nEntrada fuera de tiempo registrada correctamente\nHora: ${hora}:${minutos}`;
             //       }
             //     }
-
             //     // Enviar el nuevo registro al spreadsheet
             //     await axios.post(sheetAPI, registro);
-
             //     Alert.alert('Código QR Escaneado', mensajeAlerta, [{ text: 'OK', onPress: () => setIsScanning(true) }], { cancelable: false });
             //   } catch (error) {
             //     console.error("Error al interactuar con la hoja de cálculo", error);
@@ -168,7 +166,6 @@ export default function Home() {
 
             
         }
-        // setIsScanning(false);
     };
 
     if (!permission) {
@@ -230,10 +227,10 @@ export default function Home() {
             {isScanning && (
                 <CameraView
                     style={styles.camera}
-                    facing={facing}
+                    facing={"front"}
                     onBarcodeScanned={handleBarcodeScanned}
-                    barCodeScannerSettings={{
-                        barCodeTypes: ['qr'],
+                    barcodeScannerSettings={{
+                        barcodeTypes: ['qr'],
                     }}
                 >
                      <View style={{
@@ -249,7 +246,7 @@ export default function Home() {
                     </View>
                     <View style={styles.buttonContainer}>
                         <TouchableOpacity style={styles.button} onPress={goBack}>
-                            <Text style={styles.text}>Volver atras</Text>
+                            <Text style={styles.text}>Volver</Text>
                         </TouchableOpacity>
                     </View>
                    
