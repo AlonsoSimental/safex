@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, TextInput, TouchableOpacity, Switch, Image } from 'react-native';
+import { StyleSheet, TextInput, TouchableOpacity, Switch, Image, KeyboardAvoidingView, Platform } from 'react-native';
 import { Text, View } from '@/components/Themed';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -10,6 +10,11 @@ export default function TabOneScreen() {
   const [isRememberMe, setIsRememberMe] = useState(false);
 
   return (
+    <KeyboardAvoidingView
+      style={{flex: 1}}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
+    >
     <View style={styles.container}>
       <Image
         style={styles.logo}
@@ -60,9 +65,110 @@ export default function TabOneScreen() {
       </TouchableOpacity>
 
     </View>
+    </KeyboardAvoidingView>
   );
 }
 
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//     alignItems: 'center',
+//     justifyContent: 'flex-start',
+//     paddingTop: 70,
+//     backgroundColor: '#0078b7',
+//   },
+//   logo: {
+//     width: "48%", 
+//     height: "9%", 
+//     paddingBottom: 5,
+//     marginBottom: "10%",
+//   },
+//   welcomeText: {
+//     fontSize: 24,
+//     fontWeight: 'bold',
+//     color: '#f3ffff',
+//     marginBottom: 8,
+//   },
+//   welcomeText2: {
+//     fontSize: 14,
+//     fontWeight: '200',
+//     color: '#f3ffff',
+//     maxWidth: '80%',
+//     marginBottom: "17%",
+//   },
+//   fieldLabel: {
+//     fontSize: 16,
+//     fontWeight: '200',
+//     color: '#f3ffff',
+//     width: '80%',
+//     marginBottom: 8,
+//   },
+//   input: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     height: "9.5%",
+//     width: '80%',
+//     marginBottom: "11%",
+//     borderWidth: 0,
+//     borderRadius: 10,
+//     backgroundColor: 'white',
+//     color: 'black',
+//   },
+//   passwordContainer: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     width: '80%',
+//     marginBottom: "6%",
+//     borderWidth: 0,
+//     borderRadius: 10,
+//     backgroundColor: 'white',
+//   },
+//   passwordInput: {
+//     height: "100%",
+//     flex: 1,
+//     padding: "4.9%",
+//     backgroundColor: 'transparent',
+//     color: 'black',
+//   },
+//   eyeIcon: {
+//     marginRight: 15,
+//   },
+//   rememberMeContainer: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     width: '80%',
+//     marginBottom: 50,
+//     backgroundColor: 'transparent',
+//   },
+//   rememberMeText: {
+//     fontSize: 14,
+//     fontWeight: '100',
+//     color: '#f3ffff',
+//     width: '80%',
+//     marginLeft: 10,
+//   },
+//   loginButton: {
+//     height: 50,
+//     width: '80%',
+//     backgroundColor: '#ee528f',
+//     padding: 15,
+//     borderRadius: 10,
+//     alignItems: 'center',
+//     marginBottom: 20,
+//     // Sombreado para iOS
+//     shadowColor: '#000',
+//     shadowOffset: { width: 0, height: 4 },
+//     shadowOpacity: 0.25,
+//     shadowRadius: 3.84,
+//     // Sombreado para Android
+//     elevation: 5,
+//   },
+//   loginButtonText: {
+//     fontSize: 18,
+//     fontWeight: '200',
+//     color: '#f3ffff',
+//   },
+// });
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -72,10 +178,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#0078b7',
   },
   logo: {
-    width: "48%", 
-    height: "9%", 
+   height: "9%",
+    aspectRatio: 2.9,
     paddingBottom: 5,
     marginBottom: "10%",
+  },
+  title: {
+    fontSize: 30,
+    fontWeight: 'bold',
+    color: '#f3ffff',
+    marginBottom: 70,
   },
   welcomeText: {
     fontSize: 24,
@@ -88,7 +200,7 @@ const styles = StyleSheet.create({
     fontWeight: '200',
     color: '#f3ffff',
     maxWidth: '80%',
-    marginBottom: "17%",
+    marginBottom: "10%",
   },
   fieldLabel: {
     fontSize: 16,
@@ -98,12 +210,11 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   input: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    height: "9.5%",
+    height: 50,
     width: '80%',
     marginBottom: "11%",
     borderWidth: 0,
+    padding: 10,
     borderRadius: 10,
     backgroundColor: 'white',
     color: 'black',
@@ -118,9 +229,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
   },
   passwordInput: {
-    height: "100%",
+    height: 50,
     flex: 1,
-    padding: "4.9%",
+    padding: 10,
     backgroundColor: 'transparent',
     color: 'black',
   },
