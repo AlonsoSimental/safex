@@ -1,14 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { StyleSheet, Image, FlatList, Animated, Easing, TouchableOpacity, View, Alert } from 'react-native';
 import { Text } from '@/components/Themed';
-import { CameraView, useCameraPermissions } from 'expo-camera/next';
+import { CameraView, useCameraPermissions } from 'expo-camera';
 import Toast from 'react-native-toast-message';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams, useNavigation } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 import axios from 'axios';
 
 let sheetAPI = 'https://sheetdb.io/api/v1/nkf1qqmfh8elz';
 let recentEntry = "";
 const SPRING_CONFIG = { tension: 2, friction: 3 };
+let now = new Date();
+let fecha = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`;
+const scale = new Animated.Value(1);
 
 type EntryProps = {
     childName: string;
@@ -18,7 +22,7 @@ type EntryProps = {
 
 interface ScanArguments {
     data: string;
-}
+};
 
 const entriesData: EntryProps[] = [];
 
@@ -31,14 +35,15 @@ const Entry: React.FC<EntryProps> = ({ childName, entryDate, entryHour }) => (
         <Text style={styles.EntryHour}>{entryHour}</Text>
     </View>
 );
-const scale = new Animated.Value(1);
 
-export default function Home() {
-
+export default function Home(): React.JSX.Element {
+    const navigation = useNavigation();
     const [facing, setFacing] = useState('back');
     const [permission, requestPermission] = useCameraPermissions();
     const [isScanning, setIsScanning] = useState(false);
     const [entryRecorded, setEntryRecorded] = useState(false);
+    const { user } = useLocalSearchParams();
+    const [entriesData, setEntriesData] = useState<EntryProps[]>([]);
 
     useEffect(() => {
         startBreathingAnimation();
@@ -47,6 +52,23 @@ export default function Home() {
         })();
     }, []);
 
+    useFocusEffect(
+        useCallback(() => {
+          fetchEntriesData();
+          return () => {
+          };
+        }, [])
+      );
+
+    const fetchEntriesData = async () => {
+        try {
+            const response = await axios.get(sheetAPI + "/search?date=" + fecha + "&action=E&sheet=record");
+            setEntriesData(response.data);
+            console.log(entriesData);
+        } catch (error) {
+            console.error(error);
+        }
+    };
     const startBreathingAnimation = () => {
         Animated.sequence([
             Animated.spring(scale, {
@@ -72,95 +94,27 @@ export default function Home() {
 
     const handleBarcodeScanned = async ({ data }: ScanArguments) => {
         if (recentEntry != data) {
+            // console.log("escaneado", data);
+
             recentEntry = data;
-            const now = new Date();
-            const fecha = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`;
-            const hora = now.getHours();
-            const minutos = now.getMinutes().toString().padStart(2, '0');
-            const horaymin = now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
-            // try {
-            //     // Consultar todos los registros del día
-            //     const response = await axios.get(sheetAPI);
-            //     const registrosDelDia = response.data;
-            //     console.log(registrosDelDia)
 
-            //     // Filtrar los registros para encontrar los que coinciden con el ID del alumno
-            //     const registrosAlumno = registrosDelDia.filter(registro => registro.Fecha === fecha && registro.ID === data);
-
-            //     let registro = { Fecha: fecha, ID: data, Registro: '', Hora: `${hora}:${minutos}` };
-            //     let mensajeAlerta = '';
-
-            //     // Lógica para determinar si se registra una entrada o salida
-            //     if ((hora >= 7 && hora < 9) || registrosAlumno.length === 0) {
-            //       registro.Registro = 'E'; // Entrada
-            //       mensajeAlerta = `ID alumno: ${data}\nEntrada registrada correctamente\nHora: ${hora}:${minutos}`;
-            //     } else {
-            //       const entradaExistente = registrosAlumno.some(reg => reg.Registro === 'E');
-            //       if (entradaExistente) {
-            //         const ultimoRegistro = registrosAlumno[registrosAlumno.length-1];
-            //         if(ultimoRegistro.Registro === 'S') {
-            //           registro.Registro = 'E'; // Entrada fuera de tiempo
-            //           mensajeAlerta = `ID alumno: ${data}\nEntrada fuera de tiempo registrada correctamente\nHora: ${hora}:${minutos}`;
-            //         }else {
-            //           registro.Registro = 'S'; // Salida
-            //           mensajeAlerta = `ID alumno: ${data}\nSalida registrada correctamente\nHora: ${hora}:${minutos}`;
-            //         }
-            //       } else {
-            //         registro.Registro = 'E'; // Entrada fuera de tiempo
-            //         mensajeAlerta = `ID alumno: ${data}\nEntrada fuera de tiempo registrada correctamente\nHora: ${hora}:${minutos}`;
-            //       }
-            //     }
-            //     // Enviar el nuevo registro al spreadsheet
-            //     await axios.post(sheetAPI, registro);
-            //     Alert.alert('Código QR Escaneado', mensajeAlerta, [{ text: 'OK', onPress: () => setIsScanning(true) }], { cancelable: false });
-            //   } catch (error) {
-            //     console.error("Error al interactuar con la hoja de cálculo", error);
-            //     Alert.alert('Error', 'Ocurrió un error al procesar el escaneo. Intente nuevamente.', [{ text: 'OK' }]);
-            //   }
             try {
-                let action = "";
-                const response2 = await axios.get(sheetAPI+"/search?id="+data+"&date="+fecha+"&sheet=Sheet2");
-                let entries= response2.data;
-                if (entries.length == 0) {
-                    action = "E";
-                } else {
-                    const lastEntry = entries[entries.length-1];
-                    if(lastEntry.action == "E"){
-                        action = "S";
-                    } else {
-                        action = "E";
+                const fatherReq = await axios.get(sheetAPI + "/search?id=" + data + "&sheet=fathers");
+                const fatherData = fatherReq.data[0];
+                const childsReq = await axios.get(sheetAPI + "/search?father_id=" + data + "&sheet=fatherHasChilds");
+                const childsData = childsReq.data;
+                router.navigate({
+                    pathname: '/list',
+                    params: {
+                        fatherData: JSON.stringify(fatherData),
+                        childsData: JSON.stringify(childsData),
+                        user,
                     }
-                }
-                await axios.post(sheetAPI+"?sheet=Sheet2", {id: data, date: fecha, hour: horaymin, action: action});
-                if(action == "E"){
-                    const response = await axios.get(sheetAPI+"/search?id="+data);
-                    let entry = response.data[0];
-                    const newEntry: EntryProps = {
-                        childName: entry.name,
-                        entryDate: fecha,
-                        entryHour: horaymin
-                    };
-                    entriesData.push(newEntry);
-                }    
-
-                Toast.show({
-                    type: 'success',
-                    position: 'bottom',
-                    text1: 'QR escaneado con éxito',
-                    visibilityTime: 2000, 
-                    autoHide: true,
-                    topOffset: 30,
-                    bottomOffset: 40,
-                    onShow: () => {},
-                    onHide: () => {} 
                 });
             } catch (error) {
                 console.log("Error al interactuar con la hoja de cálculo", error);
                 Alert.alert('Error', 'Ocurrió un error al procesar el escaneo. Intente nuevamente.', [{ text: 'OK' }]);
-            }   
-            
-
-            
+            }
         }
     };
 
@@ -215,7 +169,6 @@ export default function Home() {
                                     />
                                 )}
                             />
-
                         </View>
                     </View>
                 </View>
@@ -234,7 +187,7 @@ export default function Home() {
                             <Text style={styles.text}>Volver</Text>
                         </TouchableOpacity>
                     </View>
-                   
+
                 </CameraView>
             )}
             <Toast />
@@ -341,7 +294,6 @@ const styles = StyleSheet.create({
         paddingLeft: "4%",
         paddingRight: "4%",
         paddingTop: "8%",
-        paddingBottom: "22%",
         borderTopLeftRadius: 16,
         borderTopRightRadius: 16,
         backgroundColor: "rgba(255,255,255,1)",

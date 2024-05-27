@@ -8,6 +8,7 @@ export default function TabOneScreen() {
 
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [isRememberMe, setIsRememberMe] = useState(false);
+  const [user, setUser] = useState('');
 
   return (
     <KeyboardAvoidingView
@@ -29,7 +30,8 @@ export default function TabOneScreen() {
         style={styles.input}
         placeholder="Correo"
         placeholderTextColor={'#dddded'}
-        keyboardType="email-address"
+        // keyboardType="email-address"
+        onChangeText={setUser}
       />
       <Text style={styles.fieldLabel}>Contraseña</Text>
       <View style={styles.passwordContainer}>
@@ -60,7 +62,14 @@ export default function TabOneScreen() {
         <Text style={styles.rememberMeText}>Recordar contraseña</Text>
       </View>
 
-      <TouchableOpacity style={styles.loginButton} onPress={() => router.navigate('/home')}>
+      <TouchableOpacity 
+        style={styles.loginButton} 
+        onPress={() => router.navigate({
+          pathname: '/home',
+          params: {
+            user: user
+          },
+        })}>
         <Text style={styles.loginButtonText}>Iniciar sesión</Text>
       </TouchableOpacity>
 

@@ -53,15 +53,16 @@ function RootLayoutNav() {
       <Stack>
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="viewQR" options={{ headerTitle: (props) => <LogoTitle {...props} /> }} />
+      
       <Stack.Screen 
         name="list" 
         options={{ 
-          title: 'Padres en la fila',
+          title: 'Entrada / Salida',
           headerStyle: {
             backgroundColor: '#0078b7',
           },
           headerTintColor: '#fff',
+          presentation: 'modal',
         }} 
       />
       </Stack>
