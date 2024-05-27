@@ -11,11 +11,7 @@ export default function TabOneScreen() {
   const [user, setUser] = useState('');
 
   return (
-    <KeyboardAvoidingView
-      style={{flex: 1}}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
-    >
+    
     <View style={styles.container}>
       <Image
         style={styles.logo}
@@ -74,7 +70,7 @@ export default function TabOneScreen() {
       </TouchableOpacity>
 
     </View>
-    </KeyboardAvoidingView>
+    
   );
 }
 
@@ -187,8 +183,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#0078b7',
   },
   logo: {
-   height: "9%",
-    aspectRatio: 2.9,
+    width: "48%", 
+    height: "9%", 
     paddingBottom: 5,
     marginBottom: "10%",
   },

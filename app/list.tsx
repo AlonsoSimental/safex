@@ -10,7 +10,7 @@ import {
 import { useLocalSearchParams, router } from 'expo-router';
 import axios from 'axios';
 
-let sheetAPI = 'https://sheetdb.io/api/v1/nkf1qqmfh8elz';
+let sheetAPI = 'https://sheet.best/api/sheets/a9845046-7530-4432-9f09-f54626eeb6ce';
 
 
 type ChildProps = {
@@ -18,12 +18,6 @@ type ChildProps = {
   childId: string;
 };
 
-type ChildData = {
-  child_id: string;
-  father_id: string;
-};
-
-const childs: ChildProps[] = [];
 let fatherName = "";
 
 const Child: React.FC<ChildProps> = ({ childName, childId }) => (
@@ -47,11 +41,11 @@ const Child: React.FC<ChildProps> = ({ childName, childId }) => (
 
 
 export default function List(): React.JSX.Element {
-  const [childs, setChilds] = useState<ChildProps[]>([]);
-  
+
   const { fatherData, childsData, user } = useLocalSearchParams();
   let parsedFatherData;
   let parsedChildData;
+
   if (typeof fatherData === 'string') {
     parsedFatherData = JSON.parse(fatherData);
   } else {
@@ -67,49 +61,45 @@ export default function List(): React.JSX.Element {
   fatherName = parsedFatherData.name + " " + parsedFatherData.first_lastname + " " + parsedFatherData.second_lastname;
 
   const handleAction = async () => {
+    let record = [];
     const now = new Date();
     const fecha = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`;
     const hora = now.getHours();
     const minutos = now.getMinutes().toString().padStart(2, '0');
     const horaymin = now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
-    for (const item of childs) {
-      let action = "";
-      const response = await axios.get(sheetAPI + "/search?id=" + item.childId + "&date=" + fecha + "&sheet=record");
-      let entries = response.data;
-      if (entries.length == 0) {
-        action = "E";
-      } else {
-        const lastEntry = entries[entries.length - 1];
-        if (lastEntry.action == "E") {
-          action = "S";
-        } else {
+
+    try {
+      for (const item of parsedChildData) {
+        let action = "";
+        const response = await axios.get(sheetAPI + "/tabs/record/search?id=" + item.childId + "&date=" + fecha);
+        let entries = response.data;
+        if (entries.length == 0) {
           action = "E";
+        } else {
+          const lastEntry = entries[entries.length - 1];
+          if (lastEntry.action == "E") {
+            action = "S";
+          } else {
+            action = "E";
+          }
         }
-      }
-      await axios.post(sheetAPI + "?sheet=record", { id: item.childId, date: fecha, hour: horaymin, action: action, let: fatherName, recibe: user });
-    };
-    router.back();
-  };
-
-  const GetChildsData = async (parsedChildData: ChildData[]) => {
-    const newChilds: ChildProps[] = [];
-    for (const item of parsedChildData) {
-      try {
-        const response = await axios.get(`${sheetAPI}/search?id=${item.child_id}&sheet=childs`);
-        let child = response.data[0];
-        const newChild: ChildProps = {
-          childId: child.id,
-          childName: `${child.name} ${child.first_lastname} ${child.second_lastname}`,
-        };
-        newChilds.push(newChild);
-      } catch (error) {
-        console.log(error);
-      }
+        record.push({
+          id: item.childId,
+          date: fecha,
+          hour: horaymin,
+          action: action,
+          leaves: fatherName,
+          receives: user,
+          child_name: item.childName,
+        });
+      };
+      await axios.post(sheetAPI + "/tabs/record", record);
+      router.back();
+    } catch (error) {
+      console.log(error);
     }
-    setChilds(newChilds);
-  };
 
-  GetChildsData(parsedChildData);
+  };
 
   return (
     <View style={styles.container}>
@@ -144,7 +134,7 @@ export default function List(): React.JSX.Element {
       <View style={styles.backgroundBottom}>
         <FlatList
           style={styles.flatList}
-          data={childs}
+          data={parsedChildData}
           keyExtractor={(item, index) => index.toString()}
           renderItem={({ item }) => (
             <Child

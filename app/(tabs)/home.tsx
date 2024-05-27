@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { StyleSheet, Image, FlatList, Animated, Easing, TouchableOpacity, View, Alert } from 'react-native';
+import { StyleSheet, Image, FlatList, Animated, Easing, TouchableOpacity, View, Alert, ActivityIndicator } from 'react-native';
 import { Text } from '@/components/Themed';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import Toast from 'react-native-toast-message';
@@ -7,7 +7,7 @@ import { router, useLocalSearchParams, useNavigation } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import axios from 'axios';
 
-let sheetAPI = 'https://sheetdb.io/api/v1/nkf1qqmfh8elz';
+let sheetAPI = 'https://sheet.best/api/sheets/a9845046-7530-4432-9f09-f54626eeb6ce';
 let recentEntry = "";
 const SPRING_CONFIG = { tension: 2, friction: 3 };
 let now = new Date();
@@ -44,6 +44,7 @@ export default function Home(): React.JSX.Element {
     const [entryRecorded, setEntryRecorded] = useState(false);
     const { user } = useLocalSearchParams();
     const [entriesData, setEntriesData] = useState<EntryProps[]>([]);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         startBreathingAnimation();
@@ -54,17 +55,21 @@ export default function Home(): React.JSX.Element {
 
     useFocusEffect(
         useCallback(() => {
-          fetchEntriesData();
-          return () => {
-          };
+            fetchEntriesData();
+            return () => {
+            };
         }, [])
-      );
+    );
 
     const fetchEntriesData = async () => {
         try {
-            const response = await axios.get(sheetAPI + "/search?date=" + fecha + "&action=E&sheet=record");
-            setEntriesData(response.data);
-            console.log(entriesData);
+            const response = await axios.get(sheetAPI + "/tabs/record/search?date=" + fecha + "&action=E");
+            const mappedEntries = response.data.map((item: any) => ({
+                childName: item.child_name,
+                entryDate: item.date,
+                entryHour: item.hour,
+            }));
+            setEntriesData(mappedEntries);
         } catch (error) {
             console.error(error);
         }
@@ -94,24 +99,30 @@ export default function Home(): React.JSX.Element {
 
     const handleBarcodeScanned = async ({ data }: ScanArguments) => {
         if (recentEntry != data) {
-            // console.log("escaneado", data);
-
+            setLoading(true);
             recentEntry = data;
 
             try {
-                const fatherReq = await axios.get(sheetAPI + "/search?id=" + data + "&sheet=fathers");
+                const fatherReq = await axios.get(sheetAPI + "/tabs/fathers/search?id=" + data );
                 const fatherData = fatherReq.data[0];
-                const childsReq = await axios.get(sheetAPI + "/search?father_id=" + data + "&sheet=fatherHasChilds");
-                const childsData = childsReq.data;
+                const familyReq = await axios.get(sheetAPI+"/tabs/fatherGroup/search?father_id="+fatherData.id);
+                const fatherGroup = familyReq.data[0];
+                const childReq = await axios.get(sheetAPI+"/tabs/childs/search?father_group_id="+fatherGroup.father_group_id);
+                const mappedData = childReq.data.map((item: any) => ({
+                    childName: `${item.name} ${item.first_lastname} ${item.second_lastname}`,
+                    childId: item.id,
+                }));
+                setLoading(false);
                 router.navigate({
                     pathname: '/list',
                     params: {
                         fatherData: JSON.stringify(fatherData),
-                        childsData: JSON.stringify(childsData),
+                        childsData: JSON.stringify(mappedData),
                         user,
                     }
                 });
             } catch (error) {
+                setLoading(false);
                 console.log("Error al interactuar con la hoja de cálculo", error);
                 Alert.alert('Error', 'Ocurrió un error al procesar el escaneo. Intente nuevamente.', [{ text: 'OK' }]);
             }
@@ -159,6 +170,7 @@ export default function Home(): React.JSX.Element {
                         <Text style={styles.entries}>Entradas</Text>
                         <View style={styles.Entrylist}>
                             <FlatList
+                                style={styles.list}
                                 data={entriesData}
                                 keyExtractor={(item, index) => index.toString()}
                                 renderItem={({ item }) => (
@@ -183,11 +195,16 @@ export default function Home(): React.JSX.Element {
                     }}
                 >
                     <View style={styles.buttonContainer}>
-                        <TouchableOpacity style={styles.button} onPress={goBack}>
-                            <Text style={styles.text}>Volver</Text>
-                        </TouchableOpacity>
+                        {loading && (
+                            <ActivityIndicator style={styles.loader} size="large" color="#0000ff" />
+                        )}
+                        {!loading && (
+                          <TouchableOpacity style={styles.button} onPress={goBack}>
+                          <Text style={styles.text}>Volver</Text>
+                      </TouchableOpacity>  
+                        )}
                     </View>
-
+                    
                 </CameraView>
             )}
             <Toast />
@@ -383,10 +400,20 @@ const styles = StyleSheet.create({
         alignSelf: 'flex-end',
         alignItems: 'center',
     },
+    loader: {
+        flex: 1,
+        alignSelf: 'center',
+        alignItems: 'center',
+        width: 200,
+        height: 200,
+    },
     text: {
         fontSize: 24,
         fontWeight: 'bold',
         color: 'white',
     },
+    list: {
+        height: '74%'
+    }
 })
 
