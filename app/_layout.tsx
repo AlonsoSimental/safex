@@ -62,7 +62,6 @@ function RootLayoutNav() {
             backgroundColor: '#0078b7',
           },
           headerTintColor: '#fff',
-          presentation: 'modal',
         }} 
       />
       </Stack>
@@ -72,7 +71,6 @@ function RootLayoutNav() {
 
 function LogoTitle() {
   return (
-    
       <Image
         style={{ width: 130, height: 40}}
         source={require('../assets/images/logo.png')}

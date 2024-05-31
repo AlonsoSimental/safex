@@ -5,9 +5,11 @@ import {
   Image,
   StyleSheet,
   FlatList,
-  TouchableOpacity
+  TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
+import { AntDesign } from '@expo/vector-icons';
 import axios from 'axios';
 
 let sheetAPI = 'https://sheet.best/api/sheets/a9845046-7530-4432-9f09-f54626eeb6ce';
@@ -16,32 +18,80 @@ let sheetAPI = 'https://sheet.best/api/sheets/a9845046-7530-4432-9f09-f54626eeb6
 type ChildProps = {
   childName: string;
   childId: string;
+  childLevel: string;
+  childGroup: string;
+  handleAction: (childId: string, childName: string) => void;
 };
 
 let fatherName = "";
 
-const Child: React.FC<ChildProps> = ({ childName, childId }) => (
-  <View style={styles.childBlock}>
-    <Image
-      style={styles.childImage}
-      source={require('../assets/images/child_placeholder.png')}
-    />
-    <View style={styles.childTextContainer}>
-      <View style={styles.childTextBlock}>
-        <Text style={styles.childLabel}>Nombre del estudiante:</Text>
-        <Text style={styles.childValue}>{childName}</Text>
+const Child: React.FC<ChildProps> = ({ childName, childId, childLevel, childGroup, handleAction }) => {
+  const [loading, setLoading] = useState(false);
+  const [done, setDone] = useState(false);
+
+  const onPressHandler = async () => {
+    setLoading(true);
+    try {
+      await handleAction(childId, childName);
+      setDone(true);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <View style={styles.childBlock}>
+      <Image
+        style={styles.childImage}
+        source={require('../assets/images/child_placeholder.png')}
+        resizeMode='cover'
+      />
+      <View style={styles.childTextContainer}>
+        <View style={styles.childTextBlock}>
+          <Text style={styles.childLabel}>Nombre del estudiante:</Text>
+          <Text style={styles.childValue}>{childName}</Text>
+        </View>
+        <View style={styles.childTextBlock}>
+          <Text style={styles.childLabel}>No. Id</Text>
+          <Text style={styles.childValue}>{childId}</Text>
+        </View>
       </View>
-      <View style={styles.childTextBlock}>
-        <Text style={styles.childLabel}>No. Id</Text>
-        <Text style={styles.childValue}>{childId}</Text>
+      <View style={styles.childTextContainer2}>
+        <View style={styles.childTextBlock}>
+          <Text style={styles.childLabel}>Nivel:</Text>
+          <Text style={styles.childValue}>{childLevel}</Text>
+        </View>
+        <View style={styles.childTextBlock}>
+          <Text style={styles.childLabel}>Grupo</Text>
+          <Text style={styles.childValue}>{childGroup}</Text>
+        </View>
+      </View>
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity style={styles.pinkButton} disabled={loading || done}>
+          <Text style={styles.buttonText}>Reportar</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.greenButton}
+          onPress={onPressHandler}
+          disabled={loading || done}
+        >
+          {loading ? (
+            <ActivityIndicator size="small" color="#ffffff" />
+          ) : done ? (
+            <AntDesign name="check" size={24} color="#ffffff" />
+          ) : (
+            <Text style={styles.buttonText}>Continuar</Text>
+          )}
+        </TouchableOpacity>
       </View>
     </View>
-  </View>
-);
+  );
+};
 
 
 export default function List(): React.JSX.Element {
-
   const { fatherData, childsData, user } = useLocalSearchParams();
   let parsedFatherData;
   let parsedChildData;
@@ -60,18 +110,16 @@ export default function List(): React.JSX.Element {
 
   fatherName = parsedFatherData.name + " " + parsedFatherData.first_lastname + " " + parsedFatherData.second_lastname;
 
-  const handleAction = async () => {
+  const handleAction = async (childId: string, childName: string) => {
     let record = [];
     const now = new Date();
     const fecha = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`;
     const hora = now.getHours();
     const minutos = now.getMinutes().toString().padStart(2, '0');
     const horaymin = now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
-
     try {
-      for (const item of parsedChildData) {
         let action = "";
-        const response = await axios.get(sheetAPI + "/tabs/record/search?id=" + item.childId + "&date=" + fecha);
+        const response = await axios.get(sheetAPI + "/tabs/record/search?id=" + childId + "&date=" + fecha);
         let entries = response.data;
         if (entries.length == 0) {
           action = "E";
@@ -84,21 +132,18 @@ export default function List(): React.JSX.Element {
           }
         }
         record.push({
-          id: item.childId,
+          id: childId,
           date: fecha,
           hour: horaymin,
           action: action,
           leaves: fatherName,
           receives: user,
-          child_name: item.childName,
+          child_name: childName,
         });
-      };
       await axios.post(sheetAPI + "/tabs/record", record);
-      router.back();
     } catch (error) {
       console.log(error);
     }
-
   };
 
   return (
@@ -140,19 +185,12 @@ export default function List(): React.JSX.Element {
             <Child
               childName={item.childName}
               childId={item.childId}
+              childLevel={item.childLevel}
+              childGroup={item.childGroup}
+              handleAction={handleAction}
             />
           )}
         />
-
-      </View>
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.pinkButton}>
-          <Text style={styles.buttonText}>Reportar</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.greenButton} onPress={handleAction}>
-          <Text style={styles.buttonText}>Continuar</Text>
-        </TouchableOpacity>
-
       </View>
     </View>
   );
@@ -199,6 +237,7 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'column',
     alignItems: 'flex-start',
+    right: 15,
   },
   textBlock2: {
     flex: 1,
@@ -225,14 +264,12 @@ const styles = StyleSheet.create({
     width: '73%',
     height: '7%',
     position: 'relative',
-    zIndex: 12,
     marginTop: '1%',
   },
   infoBlock: {
     width: '37%',
     height: '7%',
     position: 'absolute',
-    zIndex: 9,
   },
   backgroundBottom: {
     width: '100%',
@@ -247,15 +284,21 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     alignItems: 'center',
     alignContent: 'flex-start',
-    paddingTop: 15,
+    paddingTop: 10,
+    paddingBottom: 60,
   },
   childImage: {
-    flex: 1,
-    width: 100,
-    height: 100,
+    flex: 1.5,
+    aspectRatio: 1,
     left: 15,
   },
   childTextContainer: {
+    flex: 3,
+    left: 30,
+    justifyContent: 'center',
+    alignContent: 'flex-start',
+  },
+  childTextContainer2: {
     flex: 2,
     left: 30,
     justifyContent: 'center',
@@ -276,13 +319,15 @@ const styles = StyleSheet.create({
     lineHeight: 21.784,
     color: '#0077b6',
     marginTop: 3,
+    flexWrap: 'wrap',
+    marginRight: 5,
   },
   flatList: {
-    marginBottom: 100,
+    marginBottom: 25,
   },
   buttonContainer: {
     position: 'absolute',
-    bottom: 10,
+    bottom: 3,
     left: "5%",
     right: "5%",
     flexDirection: 'row',
@@ -290,9 +335,10 @@ const styles = StyleSheet.create({
   },
   greenButton: {
     backgroundColor: '#bbe41f',
-    padding: 15,
+    padding: 13,
     borderRadius: 10,
     width: '40%',
+    height: 45,
     alignItems: 'center',
   },
   pinkButton: {
@@ -300,11 +346,12 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 10,
     width: '40%',
+    height: 45,
     alignItems: 'center',
   },
   buttonText: {
     color: '#ffffff',
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: 'bold',
   },
 });

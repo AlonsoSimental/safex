@@ -1,4 +1,5 @@
 import React from 'react';
+import { Platform } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Link, Tabs, router, useNavigation } from 'expo-router';
 
@@ -31,7 +32,7 @@ export default function TabLayout() {
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         tabBarStyle: { 
           backgroundColor: '#0078b7', 
-          height: 55,
+          height: Platform.OS === 'ios' ? 75 : 55,
           shadowColor: '#000',
           shadowOffset: { width: 0, height: -2 },
           shadowOpacity: 0.1,
@@ -85,6 +86,7 @@ export default function TabLayout() {
           title: 'Perfil',
           tabBarIcon: ({ color }) => <TabBarIcon name="user-circle-o" color={"#faffff"} />,
           tabBarLabelStyle: { color: '#faffff' },
+          href: null,
         }}
       />
     </Tabs>
